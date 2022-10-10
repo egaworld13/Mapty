@@ -1,1 +1,1 @@
-## App for sport activities
+## App for map sport activities
