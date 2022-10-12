@@ -4,7 +4,7 @@
 class Workout {
   date = new Date();
   //?creating API
-  clicks = 0;
+  // clicks = 0;
 
   //? usually use a library for id creation
   id = (Date.now() + '').slice(-10);
@@ -55,10 +55,6 @@ class Cycling extends Workout {
     return this.speed;
   }
 }
-//? Experiment
-// const run1 = new Running([54, 24], 5.2, 24, 180);
-// const cycling1 = new Running([54, 24], 25, 20, 150);
-// console.log(run1, cycling1);
 
 //////////////////////////////////
 
@@ -78,7 +74,12 @@ class App {
   #workouts = [];
   mapZoomLevel = 13;
   constructor() {
+    //*Getting position
     this._getPosition();
+
+    //*Get data form local storage
+    this._getLocalStorage();
+    //* Attach event handlers
     //? without bind. this keyword is pointing to form DOM obj. not App obj.
     form.addEventListener('submit', this._newWorkout.bind(this));
     //? Switching between running and cycling!
@@ -119,6 +120,8 @@ class App {
     //? leaflet api method handling clicks on map
     //? 'this'is a App obj.
     this.#map.on('click', this._showForm.bind(this));
+    //? Render the marker!
+    this.#workouts.forEach(work => this._renderWorkoutMarker(work));
   }
 
   //* POPUP MSG AND MARKER SETUP
@@ -162,6 +165,7 @@ class App {
     const duration = +inputDuration.value;
     const { lat, lng } = this.#mapEvent.latlng;
     let workout;
+
     //If the workout running, create a running object
     if (type === 'running') {
       const cadence = +inputCadence.value;
@@ -172,9 +176,11 @@ class App {
         !allPositive(distance, duration, cadence)
       )
         return alert('Inputs have to be positive numbers!');
+
       //*CREATING WORKOUT AND PUSH TO ARRAY!
       workout = new Running([lat, lng], distance, duration, cadence);
     }
+
     //If workout cycling, create a cycling object
     if (type === 'cycling') {
       const elevation = +inputElevation.value;
@@ -191,10 +197,15 @@ class App {
 
     //Render workout on the map as a marker
     this._renderWorkoutMarker(workout);
+
     //Render workout on the list
     this._renderWorkout(workout);
+
     //Hide form +clear input fields
     this._hideForm();
+
+    //Set local storage to all workout
+    this._setLocalStorage();
   }
   _renderWorkoutMarker(workout) {
     L.marker(workout.coords)
@@ -258,6 +269,7 @@ class App {
   //Event delegation
   _moveToPopup(e) {
     const workoutEl = e.target.closest('.workout');
+
     //Guard usage
     if (!workoutEl) return;
     const workout = this.#workouts.find(
@@ -269,8 +281,30 @@ class App {
       pan: { duration: 1 },
     });
 
-    //? Using public interface
-    workout.click();
+    //? Using a public interface
+    //! after workout obj is converted to string and saved to local storage  and then get converted back
+    //! to obj, it's a lost prototype chain.
+    // workout.click();
+  }
+
+  //? API which browsers provide to us! // JSON.stringify convert obj to string
+  //? localstorage is for small data.
+  _setLocalStorage() {
+    localStorage.setItem('workouts', JSON.stringify(this.#workouts));
+  }
+  _getLocalStorage() {
+    const data = JSON.parse(localStorage.getItem('workouts'));
+
+    //Guard
+    if (!data) return;
+    //? Displaying existing workouts on page load!
+    this.#workouts = data;
+    this.#workouts.forEach(work => this._renderWorkout(work));
+  }
+  //remove data form local storage
+  reset() {
+    localStorage.removeItem('workouts');
+    location.reload();
   }
 }
 const app = new App();
