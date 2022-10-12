@@ -308,3 +308,17 @@ class App {
   }
 }
 const app = new App();
+
+////////////////////////////////////////////
+//TODO
+//*  Delete workout
+//*  Edit workout
+//*  delete all workouts
+//*  Sorting
+//*  Solution for data storing
+//*  More realistic messages
+//? HARD ones
+//*  Ability to position the map to show all workouts (leaflet)
+//*  Ability to draw lines and shapes instead of just points
+//*  Geocode location form coordinates ('run in Faro, Portugal') "only after asynchronous js section"
+//*  Display weather data to woekout time and place "only after asynchronous js section"
