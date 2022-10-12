@@ -3,6 +3,8 @@
 //* WORKOUT CLASS
 class Workout {
   date = new Date();
+  //?creating API
+  clicks = 0;
 
   //? usually use a library for id creation
   id = (Date.now() + '').slice(-10);
@@ -18,6 +20,9 @@ class Workout {
     this.description = `${this.type[0].toUpperCase()}${this.type.slice(1)} on ${
       months[this.date.getMonth()]
     } ${this.date.getDay()}`;
+  }
+  click() {
+    this.clicks++;
   }
 }
 class Running extends Workout {
@@ -71,12 +76,14 @@ class App {
   #map;
   #mapEvent;
   #workouts = [];
+  mapZoomLevel = 13;
   constructor() {
     this._getPosition();
     //? without bind. this keyword is pointing to form DOM obj. not App obj.
     form.addEventListener('submit', this._newWorkout.bind(this));
     //? Switching between running and cycling!
     inputType.addEventListener('change', this._toggleElevationField);
+    containerWorkouts.addEventListener('click', this._moveToPopup.bind(this));
   }
 
   //*METHODS
@@ -102,7 +109,7 @@ class App {
     const coords = [latitude, longitude];
 
     //?Leaflet API (3rd party library)
-    this.#map = L.map('map').setView(coords, '12');
+    this.#map = L.map('map').setView(coords, this.mapZoomLevel);
 
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution:
@@ -181,7 +188,7 @@ class App {
 
     //Add a new object to the workout array
     this.#workouts.push(workout);
-    console.log(workout);
+
     //Render workout on the map as a marker
     this._renderWorkoutMarker(workout);
     //Render workout on the list
@@ -241,12 +248,29 @@ class App {
 <span class="workout__unit">km/h</span>
 </div>
 <div class="workout__details">
-<span class="workout__icon">⛰</span>
+<span class="workout__icon">🗻</span>
 <span class="workout__value">${workout.elevationGain}</span>
 <span class="workout__unit">m</span>
 </div>
 </li>`;
     form.insertAdjacentHTML('afterend', html);
+  }
+  //Event delegation
+  _moveToPopup(e) {
+    const workoutEl = e.target.closest('.workout');
+    //Guard usage
+    if (!workoutEl) return;
+    const workout = this.#workouts.find(
+      work => work.id === workoutEl.dataset.id
+    );
+    //?setview leaflet method!
+    this.#map.setView(workout.coords, this.mapZoomLevel, {
+      animate: true,
+      pan: { duration: 1 },
+    });
+
+    //? Using public interface
+    workout.click();
   }
 }
 const app = new App();
